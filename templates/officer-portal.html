@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Tourism Officer Portal</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8fbff 0%, #ffffff 50%, #f0f8ff 100%);
+            color: #1e3a8a;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 50%, #1d4ed8 100%);
+            border-radius: 15px;
+            padding: 20px 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 26px;
+            font-weight: 700;
+        }
+
+        .header-subtitle {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        .user-info {
+            text-align: right;
+        }
+
+        .user-name {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .user-role {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        /* Login Section */
+        .login-section {
+            max-width: 450px;
+            margin: 100px auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.15);
+            border: 1px solid #e0f2fe;
+        }
+
+        .login-title {
+            text-align: center;
+            font-size: 26px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #3b82f6, #1e40af);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 30px;
+        }
+
+        /* Location Permission */
+        .location-request {
+            background: linear-gradient(135deg, #ecfdf5, #f0f9ff);
+            border: 2px solid #10b981;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            display: none;
+        }
+
+        .location-request.show {
+            display: block;
+        }
+
+        .location-status {
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: 500;
+        }
+
+        .location-granted {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid #10b981;
+        }
+
+        .location-denied {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+
+        /* Emergency Notifications */
+        .emergency-notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(45deg, #ef4444, #dc2626);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            z-index: 1003;
+            box-shadow: 0 15px 35px rgba(239, 68, 68, 0.4);
+            animation: emergencyPulse 2s infinite;
+            display: none;
+            min-width: 400px;
+            text-align: center;
+        }
+
+        .emergency-notification.show {
+            display: block;
+        }
+
+        @keyframes emergencyPulse {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.05); }
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #1e3a8a;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            background: white;
+            border: 2px solid #e0f2fe;
+            border-radius: 10px;
+            color: #1e3a8a;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #3b82f6, #1e40af);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #10b981, #059669);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(45deg, #f59e0b, #d97706);
+            color: white;
+        }
+
+        /* Dashboard */
+        .dashboard {
+            display: none;
+        }
+
+        .dashboard.active {
+            display: block;
+        }
+
+        /* Navigation */
+        .nav-tabs {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            background: white;
+            padding: 10px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e0f2fe;
+        }
+
+        .nav-tab {
+            padding: 12px 25px;
+            background: transparent;
+            border: 1px solid #e0f2fe;
+            border-radius: 8px;
+            color: #1e3a8a;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-tab:hover {
+            background: linear-gradient(135deg, #f0f9ff, #dbeafe);
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(45deg, #3b82f6, #1e40af);
+            border-color: #3b82f6;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Dashboard Cards */
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            border: 1px solid #f0f9ff;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #3b82f6, #1e40af, #1d4ed8);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(59, 130, 246, 0.2);
+            border-color: #dbeafe;
+        }
+
+        .stat-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+            opacity: 0.8;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #3b82f6;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 15px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        /* Content Sections */
+        .content-section {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            border: 1px solid #f0f9ff;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f9ff;
+        }
+
+        .section-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #1e3a8a;
+        }
+
+        /* Map */
+        .map-container {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            border: 1px solid #f0f9ff;
+            margin-bottom: 30px;
+        }
+
+        .map-header {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #f0f9ff;
+        }
+
+        .map-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e3a8a;
+        }
+
+        .map-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .map-btn {
+            padding: 8px 15px;
+            background: white;
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            color: #3b82f6;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+
+        .map-btn:hover {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .map {
+            height: 400px;
+            width: 100%;
+        }
+
+        /* Tables */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .data-table th {
+            background: linear-gradient(45deg, #3b82f6, #1e40af);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .data-table td {
+            padding: 15px;
+            border-bottom: 1px solid #f0f9ff;
+            color: #1e3a8a;
+        }
+
+        .data-table tr:hover {
+            background: #f8fafc;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #64748b;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-active {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid #10b981;
+        }
+
+        .status-critical {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+
+        .status-pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+            border: 1px solid #f59e0b;
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 10px;
+            color: white;
+            z-index: 1002;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            max-width: 350px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: linear-gradient(45deg, #10b981, #059669);
+        }
+
+        .notification.error {
+            background: linear-gradient(45deg, #ef4444, #dc2626);
+        }
+
+        .notification.info {
+            background: linear-gradient(45deg, #3b82f6, #1e40af);
+        }
+
+        .notification.warning {
+            background: linear-gradient(45deg, #f59e0b, #d97706);
+        }
+
+        /* Officer Badge */
+        .officer-badge {
+            background: linear-gradient(135deg, #3b82f6, #1e40af);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.2);
+        }
+
+        .badge-number {
+            font-size: 24px;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 10px;
+        }
+
+        .badge-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .badge-zone {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .nav-tabs {
+                flex-wrap: wrap;
+            }
+
+            .dashboard-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .emergency-notification {
+                min-width: 300px;
+                padding: 15px 20px;
+            }
+        }
+
+        /* Utility Classes */
+        .hidden {
+            display: none !important;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .mb-20 {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Emergency Notification Banner -->
+    <div id="emergencyNotification" class="emergency-notification">
+        <div style="font-size: 18px; font-weight: 700; margin-bottom: 10px;">🚨 TOURIST EMERGENCY ALERT</div>
+        <div id="emergencyMessage">Emergency alert received from tourist</div>
+        <div style="margin-top: 10px;">
+            <button onclick="respondToEmergency()" style="background: rgba(255,255,255,0.2); border: 1px solid white; color: white; padding: 8px 15px; border-radius: 5px; margin-right: 10px; cursor: pointer;">🚓 Respond</button>
+            <button onclick="viewEmergencyMap()" style="background: rgba(255,255,255,0.2); border: 1px solid white; color: white; padding: 8px 15px; border-radius: 5px; margin-right: 10px; cursor: pointer;">📍 View Map</button>
+            <button onclick="dismissEmergency()" style="background: rgba(255,255,255,0.2); border: 1px solid white; color: white; padding: 8px 15px; border-radius: 5px; cursor: pointer;">✕ Dismiss</button>
+        </div>
+    </div>
+
+    <!-- Login Section -->
+    <div id="loginSection" class="login-section">
+        <h2 class="login-title">👮‍♂️ Officer Command Center</h2>
+        <p style="text-align: center; color: #64748b; margin-bottom: 30px;">Secure Officer Access - Enhanced Safety Operations</p>
+        
+        <!-- Location Permission Request -->
+        <div class="location-request" id="locationRequest">
+            <h4 style="color: #1e3a8a; margin-bottom: 15px;">📍 Location Access Required</h4>
+            <p style="color: #64748b; margin-bottom: 20px;">Location access is required for patrol tracking and emergency response.</p>
+            <button class="btn btn-success" onclick="requestLocation()">Grant Location Access</button>
+            <div class="location-status hidden" id="locationStatus"></div>
+        </div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label class="form-label">Badge ID</label>
+                <input type="text" class="form-control" id="badgeId" placeholder="Enter Badge ID (e.g., OFF-12345)" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" class="form-control" id="officerPassword" placeholder="Enter Password" required>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 20px;">
+                🔐 Access Command Center
+            </button>
+        </form>
+        
+        <div style="text-align: center; color: #64748b; font-size: 12px; margin-top: 20px;">
+            Badge ID and password provided by administration office.<br>
+            Demo Login: Use any Badge ID (e.g., OFF001) / officer123
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="dashboard" class="dashboard">
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <div class="header-content">
+                    <div>
+                        <h1>👮‍♂️ Officer Command Center</h1>
+                        <div class="header-subtitle">Real-time Tourist Safety Operations & Emergency Response</div>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name" id="officerName">Officer</div>
+                        <div class="user-role" id="officerBadge">Badge: Loading...</div>
+                        <button class="btn btn-danger" onclick="logout()" style="margin-top: 10px; font-size: 12px; padding: 8px 15px;">Logout</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Officer Badge -->
+            <div class="officer-badge">
+                <div class="badge-number" id="displayBadgeId">Loading Badge...</div>
+                <div class="badge-name" id="displayOfficerName">Officer Name</div>
+                <div class="badge-zone" id="displayPatrolZone">Patrol Zone</div>
+            </div>
+
+            <!-- Dashboard Statistics -->
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <div class="stat-icon">🧳</div>
+                    <div class="stat-number" id="activeTourists">0</div>
+                    <div class="stat-label">Active Tourists in Zone</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🚨</div>
+                    <div class="stat-number" id="activeAlerts">0</div>
+                    <div class="stat-label">Active Alerts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⚠️</div>
+                    <div class="stat-number" id="dangerZones">0</div>
+                    <div class="stat-label">Danger Zones</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📍</div>
+                    <div class="stat-number" id="patrolStatus">ON DUTY</div>
+                    <div class="stat-label">Patrol Status</div>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="showSection('overview')">📊 Overview</button>
+                <button class="nav-tab" onclick="showSection('tourists')">🧳 Tourist Monitoring</button>
+                <button class="nav-tab" onclick="showSection('map')">🗺️ Live Map</button>
+                <button class="nav-tab" onclick="showSection('alerts')">🚨 Alerts & Incidents</button>
+                <button class="nav-tab" onclick="showSection('patrol')">🚓 Patrol Log</button>
+            </div>
+
+            <!-- Overview Section -->
+            <div id="overview" class="content-section active">
+                <div class="section-header">
+                    <h2 class="section-title">📊 Command Overview</h2>
+                </div>
+                
+                <!-- Real-time Map -->
+                <div class="map-container">
+                    <div class="map-header">
+                        <h3 class="map-title">🗺️ Real-time Zone Monitoring</h3>
+                        <div class="map-controls">
+                            <button class="map-btn" onclick="refreshOverviewMap()">🔄 Refresh</button>
+                            <button class="map-btn" onclick="centerOnPatrol()">📍 My Location</button>
+                            <button class="map-btn" onclick="showTouristsOnMap()">🧳 Tourists</button>
+                        </div>
+                    </div>
+                    <div id="overviewMap" class="map"></div>
+                </div>
+
+                <!-- Recent Activities -->
+                <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08); border: 1px solid #f0f9ff;">
+                    <h3 style="color: #1e3a8a; margin-bottom: 20px;">📋 Recent Activities</h3>
+                    <div id="recentActivities">
+                        <div class="empty-state">
+                            <div class="empty-icon">📋</div>
+                            <div>Loading patrol activities...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tourist Monitoring Section -->
+            <div id="tourists" class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title">🧳 Tourist Safety Monitoring</h2>
+                </div>
+                <div id="touristsContent">
+                    <div class="empty-state">
+                        <div class="empty-icon">🧳</div>
+                        <h3>No Active Tourists</h3>
+                        <p>Tourist monitoring data will appear here when available.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Map Section -->
+            <div id="map" class="content-section">
+                <div class="map-container">
+                    <div class="map-header">
+                        <h3 class="map-title">🎯 Tactical Operations Map</h3>
+                        <div class="map-controls">
+                            <button class="map-btn" onclick="showMyPatrolArea()">🚓 Patrol Area</button>
+                            <button class="map-btn" onclick="showAllTourists()">🧳 All Tourists</button>
+                            <button class="map-btn" onclick="showDangerZones()">⚠️ Danger Zones</button>
+                            <button class="map-btn" onclick="showEmergencies()">🚨 Emergencies</button>
+                        </div>
+                    </div>
+                    <div id="tacticalMap" class="map"></div>
+                </div>
+            </div>
+
+            <!-- Alerts Section -->
+            <div id="alerts" class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title">🚨 Active Alerts & Incidents</h2>
+                </div>
+                <div id="alertsContent">
+                    <div class="empty-state">
+                        <div class="empty-icon">🚨</div>
+                        <h3>No Active Alerts</h3>
+                        <p>Emergency alerts and incidents will appear here.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patrol Log Section -->
+            <div id="patrol" class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title">🚓 Patrol Activity Log</h2>
+                    <button class="btn btn-success" onclick="updatePatrolStatus()">✅ Update Status</button>
+                </div>
+                <div id="patrolContent">
+                    <div class="empty-state">
+                        <div class="empty-icon">🚓</div>
+                        <h3>Patrol Log</h3>
+                        <p>Your patrol activities will be logged here automatically.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Application State
+        let appData = {
+            currentOfficer: null,
+            location: { lat: 28.6139, lng: 77.2090 },
+            locationGranted: false,
+            tourists: [],
+            alerts: [],
+            dangerZones: [],
+            patrolLog: [],
+            maps: {
+                overview: null,
+                tactical: null
+            },
+            stats: {
+                activeTourists: 0,
+                activeAlerts: 0,
+                dangerZones: 0
+            },
+            backendConnected: false,
+            emergencyData: null,
+            patrolStatus: 'ON_DUTY'
+        };
+
+        // API Configuration
+        const API_BASE = 'http://localhost:5000/api';
+
+        // Location Functions
+        function requestLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        appData.location = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        appData.locationGranted = true;
+                        
+                        const statusEl = document.getElementById('locationStatus');
+                        statusEl.className = 'location-status location-granted';
+                        statusEl.textContent = '✅ Location access granted - Patrol tracking active';
+                        statusEl.classList.remove('hidden');
+                        
+                        document.getElementById('locationRequest').style.display = 'none';
+                        showNotification('Location access granted! Patrol tracking is now active.', 'success');
+                        
+                        // Start patrol tracking
+                        startPatrolTracking();
+                    },
+                    (error) => {
+                        const statusEl = document.getElementById('locationStatus');
+                        statusEl.className = 'location-status location-denied';
+                        statusEl.textContent = '❌ Location access denied - Limited functionality';
+                        statusEl.classList.remove('hidden');
+                        
+                        showNotification('Location access is recommended for full patrol features', 'warning');
+                    }
+                );
+            } else {
+                showNotification('Geolocation is not supported by this browser', 'error');
+            }
+        }
+
+        function startPatrolTracking() {
+            // Update location every 30 seconds for patrol tracking
+            setInterval(() => {
+                if (appData.locationGranted && navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            appData.location = {
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude
+                            };
+                            
+                            // Log patrol movement
+                            logPatrolActivity('location_update', `Patrol position updated: ${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`);
+                        }
+                    );
+                }
+            }, 30000);
+        }
+
+        // Utility Functions
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // API Calls
+        async function apiCall(endpoint, method = 'GET', data = null) {
+            try {
+                const options = {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+                
+                if (data) {
+                    options.body = JSON.stringify(data);
+                }
+                
+                const response = await fetch(`${API_BASE}${endpoint}`, options);
+                
+                if (!response.ok) {
+                    throw new Error(`API call failed: ${response.status}`);
+                }
+                
+                appData.backendConnected = true;
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                appData.backendConnected = false;
+                return null;
+            }
+        }
+
+        // Initialize Application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show location request
+            document.getElementById('locationRequest').classList.add('show');
+            
+            // Setup event listeners
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            
+            // Check backend connection
+            checkBackendConnection();
+            
+            // Start emergency monitoring
+            startEmergencyMonitoring();
+            
+            // Load initial data
+            loadDashboardData();
+        });
+
+        async function checkBackendConnection() {
+            const health = await apiCall('/system/health');
+            if (!health) {
+                showNotification('Backend server not available. Running in demo mode.', 'info');
+            }
+        }
+
+        // Emergency Monitoring
+        function startEmergencyMonitoring() {
+            // Poll for emergency alerts every 3 seconds
+            setInterval(async () => {
+                if (appData.backendConnected && appData.currentOfficer) {
+                    const alerts = await apiCall('/alerts');
+                    if (alerts && alerts.data) {
+                        const emergencyAlerts = alerts.data.filter(alert => 
+                            alert.type === 'panic_button' && !alert.acknowledged
+                        );
+                        
+                        if (emergencyAlerts.length > 0) {
+                            showEmergencyNotification(emergencyAlerts[0]);
+                        }
+                    }
+                }
+            }, 3000);
+        }
+
+        function showEmergencyNotification(alert) {
+            appData.emergencyData = alert;
+            const notification = document.getElementById('emergencyNotification');
+            const message = document.getElementById('emergencyMessage');
+            
+            message.innerHTML = `
+                <strong>Tourist ID:</strong> ${alert.tourist_id}<br>
+                <strong>Location:</strong> ${alert.location ? `${alert.location.lat.toFixed(4)}, ${alert.location.lng.toFixed(4)}` : 'Unknown'}<br>
+                <strong>Time:</strong> ${new Date(alert.timestamp).toLocaleString()}
+            `;
+            notification.classList.add('show');
+            
+            // Play alert sound (if supported)
+            try {
+                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+L3smIcBjiN1O/QezAEI3XA7t+WQwoUXrPn66hVFAlFnt/4t2Qd');
+                audio.play();
+            } catch(e) {
+                console.log('Audio not supported');
+            }
+            
+            // Log emergency response
+            logPatrolActivity('emergency_received', `Emergency alert from tourist ${alert.tourist_id}`);
+        }
+
+        function respondToEmergency() {
+            if (appData.emergencyData) {
+                showNotification('🚓 Dispatching to emergency location!', 'info');
+                alert(`Emergency Response Initiated!\n\nTourist ID: ${appData.emergencyData.tourist_id}\nResponse Status: DISPATCHED\nETA: 3-5 minutes\n\nYou are now en route to the emergency location.`);
+                
+                // Log response
+                logPatrolActivity('emergency_response', `Dispatched to emergency - Tourist ${appData.emergencyData.tourist_id}`);
+                
+                // Mark as acknowledged
+                if (appData.backendConnected) {
+                    apiCall(`/alerts/${appData.emergencyData.id}/acknowledge`, 'POST');
+                }
+                
+                dismissEmergency();
+            }
+        }
+
+        function viewEmergencyMap() {
+            if (appData.emergencyData && appData.emergencyData.location) {
+                // Switch to map tab
+                showSection('map');
+                
+                // Center map on emergency location
+                setTimeout(() => {
+                    if (appData.maps.tactical) {
+                        appData.maps.tactical.setView([appData.emergencyData.location.lat, appData.emergencyData.location.lng], 16);
+                        
+                        // Add emergency marker
+                        L.marker([appData.emergencyData.location.lat, appData.emergencyData.location.lng])
+                            .addTo(appData.maps.tactical)
+                            .bindPopup(`🚨 EMERGENCY<br>Tourist: ${appData.emergencyData.tourist_id}<br>Time: ${new Date(appData.emergencyData.timestamp).toLocaleString()}`)
+                            .openPopup();
+                    }
+                }, 200);
+                
+                showNotification('Emergency location shown on tactical map', 'info');
+            }
+        }
+
+        function dismissEmergency() {
+            document.getElementById('emergencyNotification').classList.remove('show');
+            appData.emergencyData = null;
+        }
+
+        // Authentication
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const badgeId = document.getElementById('badgeId').value;
+            const password = document.getElementById('officerPassword').value;
+            
+            if (appData.backendConnected) {
+                const loginData = await apiCall('/officer/login', 'POST', {
+                    badgeId,
+                    password
+                });
+                
+                if (loginData && loginData.success) {
+                    appData.currentOfficer = loginData.officer;
+                    showDashboard();
+                    return;
+                } else {
+                    showNotification('Invalid Badge ID or password. Please check and try again.', 'error');
+                    return;
+                }
+            }
+            
+            // Demo mode validation
+            if (badgeId.length < 3) {
+                showNotification('Please enter a valid Badge ID', 'error');
+                return;
+            }
+            
+            if (password !== 'officer123') {
+                showNotification('Invalid password. Use: officer123', 'error');
+                return;
+            }
+            
+            // Demo success
+            appData.currentOfficer = {
+                badge: badgeId,
+                name: 'Demo Officer',
+                zone: 'Central District',
+                department: 'Tourist Safety',
+                status: 'active'
+            };
+            
+            showDashboard();
+        }
+
+        function showDashboard() {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('dashboard').classList.add('active');
+            
+            // Update officer display
+            document.getElementById('officerName').textContent = appData.currentOfficer.name;
+            document.getElementById('officerBadge').textContent = `Badge: ${appData.currentOfficer.badge}`;
+            document.getElementById('displayBadgeId').textContent = appData.currentOfficer.badge;
+            document.getElementById('displayOfficerName').textContent = appData.currentOfficer.name;
+            document.getElementById('displayPatrolZone').textContent = `Patrol Zone: ${appData.currentOfficer.zone}`;
+            
+            showNotification('Login successful! Welcome to the Officer Command Center.', 'success');
+            
+            // Initialize dashboard
+            loadDashboardData();
+            initializeMaps();
+            
+            // Start patrol tracking if location is granted
+            if (appData.locationGranted) {
+                startPatrolTracking();
+            }
+            
+            // Log login activity
+            logPatrolActivity('shift_start', `Officer ${appData.currentOfficer.badge} started patrol shift`);
+        }
+
+        // Dashboard Data Loading
+        async function loadDashboardData() {
+            try {
+                if (appData.backendConnected) {
+                    // Load tourists
+                    const tourists = await apiCall('/tourists');
+                    if (tourists) {
+                        appData.tourists = tourists.data || [];
+                        updateTouristsDisplay();
+                    }
+                    
+                    // Load alerts
+                    const alerts = await apiCall('/alerts');
+                    if (alerts) {
+                        appData.alerts = alerts.data || [];
+                        updateAlertsDisplay();
+                    }
+                    
+                    // Load danger zones
+                    const dangerZones = await apiCall('/danger-zones');
+                    if (dangerZones) {
+                        appData.dangerZones = dangerZones.data || [];
+                    }
+                    
+                    // Update stats
+                    updateDashboardStats();
+                } else {
+                    // Demo mode
+                    initializeDemoData();
+                }
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                initializeDemoData();
+            }
+        }
+
+        function initializeDemoData() {
+            appData.stats = {
+                activeTourists: 0,
+                activeAlerts: 0,
+                dangerZones: 0
+            };
+            updateDashboardStats();
+            
+            updateRecentActivities([
+                {
+                    type: 'patrol_start',
+                    description: 'Patrol shift started - Command center active',
+                    timestamp: new Date().toISOString()
+                }
+            ]);
+        }
+
+        function updateDashboardStats() {
+            document.getElementById('activeTourists').textContent = appData.stats.activeTourists || appData.tourists.length || 0;
+            document.getElementById('activeAlerts').textContent = appData.stats.activeAlerts || appData.alerts.length || 0;
+            document.getElementById('dangerZones').textContent = appData.stats.dangerZones || appData.dangerZones.length || 0;
+        }
+
+        function updateRecentActivities(activities) {
+            const container = document.getElementById('recentActivities');
+            
+            if (!activities || activities.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📋</div>
+                        <div>No recent activities</div>
+                        <div style="font-size: 12px; margin-top: 5px;">Patrol activities will appear here</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            activities.slice(0, 5).forEach(activity => {
+                html += `
+                    <div style="padding: 15px; background: #f8fafc; margin-bottom: 10px; border-radius: 10px; border-left: 3px solid #3b82f6;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: 600; color: #1e3a8a;">${activity.type.replace('_', ' ').toUpperCase()}</div>
+                                <div style="font-size: 12px; color: #64748b;">${activity.description}</div>
+                            </div>
+                            <div style="font-size: 10px; color: #94a3b8;">${new Date(activity.timestamp).toLocaleString()}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function updateTouristsDisplay() {
+            const container = document.getElementById('touristsContent');
+            
+            if (appData.tourists.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🧳</div>
+                        <h3>No Active Tourists</h3>
+                        <p>Tourist monitoring data will appear here when available.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Digital ID</th>
+                            <th>Name</th>
+                            <th>Safety Score</th>
+                            <th>Last Activity</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            appData.tourists.forEach(tourist => {
+                const safetyScore = tourist.safety_score || tourist.safetyScore || 85;
+                const location = tourist.location ? `${tourist.location.lat.toFixed(4)}, ${tourist.location.lng.toFixed(4)}` : 'Unknown';
+                
+                html += `
+                    <tr>
+                        <td style="font-family: monospace; font-size: 12px;">${tourist.digital_id}</td>
+                        <td>${tourist.name}</td>
+                        <td>
+                            <span style="color: ${safetyScore >= 80 ? '#10b981' : safetyScore >= 60 ? '#f59e0b' : '#ef4444'};">
+                                ${safetyScore}
+                            </span>
+                        </td>
+                        <td style="font-size: 12px;">${new Date(tourist.last_activity || tourist.created_at).toLocaleString()}</td>
+                        <td style="font-family: monospace; font-size: 10px;">${location}</td>
+                        <td>
+                            <span class="status-badge status-active">
+                                ${tourist.status || 'Active'}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-primary" style="font-size: 12px; padding: 5px 10px;" onclick="trackTourist('${tourist.digital_id}')">Track</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function updateAlertsDisplay() {
+            const container = document.getElementById('alertsContent');
+            
+            if (appData.alerts.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🚨</div>
+                        <h3>No Active Alerts</h3>
+                        <p>Emergency alerts and incidents will appear here.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            appData.alerts.forEach(alert => {
+                const severityColors = {
+                    'low': '#10b981',
+                    'medium': '#f59e0b',
+                    'high': '#ef4444',
+                    'critical': '#dc2626'
+                };
+                
+                html += `
+                    <div style="background: white; border-radius: 10px; padding: 20px; margin-bottom: 15px; border-left: 4px solid ${severityColors[alert.severity]}; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                            <div>
+                                <h4 style="color: #1e3a8a; margin-bottom: 5px;">${alert.title}</h4>
+                                <span style="background: ${severityColors[alert.severity]}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; text-transform: uppercase;">
+                                    ${alert.severity}
+                                </span>
+                            </div>
+                            <div style="font-size: 12px; color: #64748b;">
+                                ${new Date(alert.timestamp || alert.created_at).toLocaleString()}
+                            </div>
+                        </div>
+                        <p style="color: #64748b; margin-bottom: 15px;">${alert.message}</p>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-primary" style="font-size: 12px; padding: 5px 15px;" onclick="respondToAlert('${alert.id}')">🚓 Respond</button>
+                            <button class="btn btn-success" style="font-size: 12px; padding: 5px 15px;" onclick="acknowledgeAlert('${alert.id}')">✅ Acknowledge</button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // Navigation
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionName).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+            
+            // Initialize section-specific content
+            if (sectionName === 'map' && !appData.maps.tactical) {
+                setTimeout(initializeTacticalMap, 100);
+            }
+        }
+
+        // Map Functionality
+        function initializeMaps() {
+            // Overview map
+            setTimeout(() => {
+                if (!appData.maps.overview) {
+                    const mapElement = document.getElementById('overviewMap');
+                    if (mapElement) {
+                        appData.maps.overview = L.map('overviewMap').setView([appData.location.lat, appData.location.lng], 13);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '© OpenStreetMap contributors'
+                        }).addTo(appData.maps.overview);
+                        
+                        // Add current patrol location
+                        if (appData.locationGranted) {
+                            L.marker([appData.location.lat, appData.location.lng])
+                                .addTo(appData.maps.overview)
+                                .bindPopup('🚓 Your Patrol Location')
+                                .openPopup();
+                        }
+                    }
+                }
+            }, 500);
+        }
+
+        function initializeTacticalMap() {
+            if (!appData.maps.tactical) {
+                const mapElement = document.getElementById('tacticalMap');
+                if (mapElement) {
+                    appData.maps.tactical = L.map('tacticalMap').setView([appData.location.lat, appData.location.lng], 14);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    }).addTo(appData.maps.tactical);
+                    
+                    // Add patrol area
+                    showMyPatrolArea();
+                }
+            }
+        }
+
+        function refreshOverviewMap() {
+            if (appData.maps.overview) {
+                appData.maps.overview.invalidateSize();
+                centerOnPatrol();
+                showNotification('Overview map refreshed', 'info');
+            }
+        }
+
+        function centerOnPatrol() {
+            if (appData.maps.overview && appData.locationGranted) {
+                appData.maps.overview.setView([appData.location.lat, appData.location.lng], 15);
+                showNotification('Centered on your patrol location', 'info');
+            }
+        }
+
+        function showTouristsOnMap() {
+            if (appData.maps.overview) {
+                // Add demo tourists to map
+                const demoTourists = [
+                    { lat: appData.location.lat + 0.002, lng: appData.location.lng + 0.001, name: 'Tourist A', id: 'TID-001' },
+                    { lat: appData.location.lat - 0.001, lng: appData.location.lng + 0.003, name: 'Tourist B', id: 'TID-002' }
+                ];
+                
+                demoTourists.forEach(tourist => {
+                    L.marker([tourist.lat, tourist.lng])
+                        .addTo(appData.maps.overview)
+                        .bindPopup(`🧳 ${tourist.name}<br>ID: ${tourist.id}<br>Status: Safe`);
+                });
+                
+                showNotification('Tourist locations shown on map', 'info');
+            }
+        }
+
+        function showMyPatrolArea() {
+            if (appData.maps.tactical) {
+                // Clear existing markers
+                appData.maps.tactical.eachLayer(function(layer) {
+                    if (layer instanceof L.Marker || layer instanceof L.Circle) {
+                        appData.maps.tactical.removeLayer(layer);
+                    }
+                });
+                
+                // Add patrol location
+                L.marker([appData.location.lat, appData.location.lng])
+                    .addTo(appData.maps.tactical)
+                    .bindPopup(`🚓 ${appData.currentOfficer.name}<br>Badge: ${appData.currentOfficer.badge}<br>Zone: ${appData.currentOfficer.zone}`)
+                    .openPopup();
+                
+                // Add patrol area circle
+                L.circle([appData.location.lat, appData.location.lng], {
+                    radius: 1000,
+                    color: '#3b82f6',
+                    fillColor: '#3b82f6',
+                    fillOpacity: 0.1
+                }).addTo(appData.maps.tactical);
+                
+                showNotification('Your patrol area highlighted', 'info');
+            }
+        }
+
+        function showAllTourists() {
+            if (appData.maps.tactical) {
+                appData.tourists.forEach(tourist => {
+                    if (tourist.location) {
+                        L.marker([tourist.location.lat, tourist.location.lng])
+                            .addTo(appData.maps.tactical)
+                            .bindPopup(`🧳 ${tourist.name}<br>ID: ${tourist.digital_id}<br>Safety Score: ${tourist.safety_score || 85}`);
+                    }
+                });
+                
+                showNotification('All tourists shown on tactical map', 'info');
+            }
+        }
+
+        function showDangerZones() {
+            if (appData.maps.tactical) {
+                appData.dangerZones.forEach(zone => {
+                    L.circle([zone.lat, zone.lng], {
+                        radius: zone.radius,
+                        color: '#ef4444',
+                        fillColor: '#ef4444',
+                        fillOpacity: 0.3
+                    }).addTo(appData.maps.tactical)
+                      .bindPopup(`⚠️ ${zone.name}<br>Severity: ${zone.severity}<br>Radius: ${zone.radius}m`);
+                });
+                
+                showNotification('Danger zones highlighted on map', 'warning');
+            }
+        }
+
+        function showEmergencies() {
+            if (appData.maps.tactical) {
+                const emergencies = appData.alerts.filter(alert => alert.type === 'panic_button');
+                
+                emergencies.forEach(emergency => {
+                    if (emergency.location) {
+                        L.marker([emergency.location.lat, emergency.location.lng])
+                            .addTo(appData.maps.tactical)
+                            .bindPopup(`🚨 EMERGENCY<br>Tourist: ${emergency.tourist_id}<br>Time: ${new Date(emergency.timestamp).toLocaleString()}`);
+                    }
+                });
+                
+                showNotification('Emergency locations shown on map', 'error');
+            }
+        }
+
+        // Patrol Management
+        function logPatrolActivity(type, description) {
+            const activity = {
+                id: Date.now(),
+                type: type,
+                description: description,
+                timestamp: new Date().toISOString(),
+                location: appData.location,
+                officer: appData.currentOfficer.badge
+            };
+            
+            appData.patrolLog.unshift(activity);
+            
+            // Keep only last 50 activities
+            if (appData.patrolLog.length > 50) {
+                appData.patrolLog = appData.patrolLog.slice(0, 50);
+            }
+            
+            updateRecentActivities(appData.patrolLog);
+        }
+
+        function updatePatrolStatus() {
+            const status = prompt('Update patrol status:', appData.patrolStatus);
+            if (status) {
+                appData.patrolStatus = status;
+                document.getElementById('patrolStatus').textContent = status;
+                logPatrolActivity('status_update', `Patrol status updated: ${status}`);
+                showNotification('Patrol status updated', 'success');
+            }
+        }
+
+        // Alert Handling
+        function trackTourist(digitalId) {
+            const tourist = appData.tourists.find(t => t.digital_id === digitalId);
+            if (tourist) {
+                showNotification(`Tracking tourist ${tourist.name} (${digitalId})`, 'info');
+                logPatrolActivity('tourist_tracking', `Started tracking tourist ${tourist.name} (${digitalId})`);
+            }
+        }
+
+        function respondToAlert(alertId) {
+            showNotification('🚓 Responding to alert...', 'info');
+            logPatrolActivity('alert_response', `Responding to alert ID: ${alertId}`);
+        }
+
+        function acknowledgeAlert(alertId) {
+            const alertIndex = appData.alerts.findIndex(a => a.id === alertId);
+            if (alertIndex > -1) {
+                appData.alerts[alertIndex].acknowledged = true;
+                updateAlertsDisplay();
+                showNotification('Alert acknowledged', 'success');
+                logPatrolActivity('alert_acknowledged', `Acknowledged alert ID: ${alertId}`);
+            }
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to end your patrol shift?')) {
+                logPatrolActivity('shift_end', `Officer ${appData.currentOfficer.badge} ended patrol shift`);
+                
+                appData.currentOfficer = null;
+                document.getElementById('loginSection').style.display = 'block';
+                document.getElementById('dashboard').classList.remove('active');
+                document.getElementById('loginForm').reset();
+                
+                showNotification('Patrol shift ended. Stay safe!', 'info');
+            }
+        }
+    </script>
+</body>
+</html>

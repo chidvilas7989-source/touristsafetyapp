@@ -1,0 +1,1858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Tourism - Tourist Portal</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8fbff 0%, #ffffff 50%, #f0f8ff 100%);
+            color: #1e3a8a;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 50%, #1d4ed8 100%);
+            border-radius: 15px;
+            padding: 20px 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .header-subtitle {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .user-info {
+            text-align: right;
+        }
+
+        /* Login Section */
+        .login-section {
+            max-width: 400px;
+            margin: 100px auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.15);
+            border: 1px solid #e0f2fe;
+        }
+
+        .login-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #3b82f6, #1e40af);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 30px;
+        }
+
+        /* Location Permission */
+        .location-request {
+            background: linear-gradient(135deg, #ecfdf5, #f0f9ff);
+            border: 2px solid #10b981;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            display: none;
+        }
+
+        .location-request.show {
+            display: block;
+        }
+
+        .location-status {
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: 500;
+        }
+
+        .location-granted {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid #10b981;
+        }
+
+        .location-denied {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #1e3a8a;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            background: white;
+            border: 2px solid #e0f2fe;
+            border-radius: 10px;
+            color: #1e3a8a;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #3b82f6, #1e40af);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #10b981, #059669);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(45deg, #f59e0b, #d97706);
+            color: white;
+        }
+
+        /* Dashboard */
+        .dashboard {
+            display: none;
+        }
+
+        .dashboard.active {
+            display: block;
+        }
+
+        /* Digital ID Card */
+        .digital-id-card {
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 50%, #1d4ed8 100%);
+            border-radius: 20px;
+            padding: 30px;
+            color: white;
+            margin-bottom: 30px;
+            box-shadow: 0 15px 35px rgba(59, 130, 246, 0.3);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .digital-id-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        }
+
+        .id-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .id-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .blockchain-verified {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .tourist-id {
+            font-family: 'Courier New', monospace;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .tourist-name {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .id-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .id-detail {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            border-radius: 10px;
+        }
+
+        .id-detail-label {
+            font-size: 10px;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .id-detail-value {
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        /* Safety Score */
+        .safety-score {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            border: 1px solid #f0f9ff;
+        }
+
+        .score-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .score-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e3a8a;
+        }
+
+        .ai-badge {
+            background: linear-gradient(45deg, #3b82f6, #1e40af);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .score-display {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .score-number {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .score-good {
+            color: #10b981;
+        }
+
+        .score-warning {
+            color: #f59e0b;
+        }
+
+        .score-danger {
+            color: #ef4444;
+        }
+
+        .score-label {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .score-factors {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .score-factor {
+            background: #f8fafc;
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #e0f2fe;
+        }
+
+        .factor-icon {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .factor-label {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        /* Live Location Display */
+        .live-location {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            border: 1px solid #f0f9ff;
+        }
+
+        .location-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .location-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e3a8a;
+        }
+
+        .location-live {
+            background: linear-gradient(45deg, #10b981, #059669);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 10px;
+            font-weight: 600;
+            animation: livePulse 2s infinite;
+        }
+
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .current-coords {
+            font-family: 'Courier New', monospace;
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #e0f2fe;
+            color: #3b82f6;
+            margin-bottom: 15px;
+        }
+
+        .location-accuracy {
+            font-size: 12px;
+            color: #64748b;
+            text-align: center;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 12px;
+            padding: 5px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #f0f9ff;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .tab.active {
+            background: linear-gradient(45deg, #3b82f6, #1e40af);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            border: 1px solid #f0f9ff;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Map Container */
+        .map-container {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            border: 1px solid #f0f9ff;
+            margin-bottom: 30px;
+        }
+
+        .map-header {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #f0f9ff;
+        }
+
+        .map-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e3a8a;
+        }
+
+        .map-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .map-btn {
+            padding: 8px 15px;
+            background: white;
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            color: #3b82f6;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+
+        .map-btn:hover {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .map-btn.active {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .map {
+            height: 400px;
+            width: 100%;
+        }
+
+        /* Places Grid */
+        .places-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .place-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #f0f9ff;
+            transition: all 0.3s ease;
+        }
+
+        .place-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(59, 130, 246, 0.15);
+        }
+
+        .place-image {
+            height: 150px;
+            background: linear-gradient(135deg, #3b82f6, #1e40af);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 48px;
+        }
+
+        .place-info {
+            padding: 20px;
+        }
+
+        .place-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e3a8a;
+            margin-bottom: 5px;
+        }
+
+        .place-rating {
+            margin-bottom: 10px;
+        }
+
+        .place-description {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .place-distance {
+            font-size: 12px;
+            color: #3b82f6;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .place-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Panic Button */
+        .panic-section {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .panic-button {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ef4444, #dc2626);
+            border: none;
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4);
+            transition: all 0.3s ease;
+            animation: pulse 2s infinite;
+        }
+
+        .panic-button:hover {
+            transform: scale(1.1);
+        }
+
+        .panic-button.countdown {
+            animation: countdown 3s ease-out;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        @keyframes countdown {
+            0% { transform: scale(1); background: linear-gradient(45deg, #ef4444, #dc2626); }
+            50% { transform: scale(1.2); background: linear-gradient(45deg, #dc2626, #b91c1c); }
+            100% { transform: scale(1.5); background: linear-gradient(45deg, #b91c1c, #991b1b); }
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 10px;
+            color: white;
+            z-index: 1001;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            max-width: 350px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: linear-gradient(45deg, #10b981, #059669);
+        }
+
+        .notification.error {
+            background: linear-gradient(45deg, #ef4444, #dc2626);
+        }
+
+        .notification.info {
+            background: linear-gradient(45deg, #3b82f6, #1e40af);
+        }
+
+        .notification.warning {
+            background: linear-gradient(45deg, #f59e0b, #d97706);
+            animation: dangerAlert 2s infinite;
+        }
+
+        @keyframes dangerAlert {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* AI Alert Banner */
+        .ai-alert-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(45deg, #ef4444, #dc2626);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            z-index: 1002;
+            transform: translateY(-100%);
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .ai-alert-banner.show {
+            transform: translateY(0);
+        }
+
+        .ai-alert-banner.danger-zone {
+            animation: dangerPulse 1s infinite;
+        }
+
+        @keyframes dangerPulse {
+            0%, 100% { background: linear-gradient(45deg, #ef4444, #dc2626); }
+            50% { background: linear-gradient(45deg, #dc2626, #b91c1c); }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #64748b;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .id-details {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .places-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .panic-button {
+                width: 60px;
+                height: 60px;
+                font-size: 18px;
+            }
+
+            .map-controls {
+                justify-content: center;
+            }
+        }
+
+        /* Utility Classes */
+        .hidden {
+            display: none !important;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .mb-20 {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- AI Alert Banner -->
+    <div id="aiAlertBanner" class="ai-alert-banner">
+        <div id="aiAlertMessage">🚨 AI ALERT: You are approaching a danger zone! Please stay alert and follow safety guidelines.</div>
+        <button onclick="dismissAIAlert()" style="background: none; border: none; color: white; margin-left: 15px; cursor: pointer;">✕</button>
+    </div>
+
+    <!-- Login Section -->
+    <div id="loginSection" class="login-section">
+        <h2 class="login-title">🧳 Tourist Portal</h2>
+        <p style="text-align: center; color: #64748b; margin-bottom: 20px;">Secure Access with Digital ID</p>
+        
+        <!-- Location Permission Request -->
+        <div class="location-request" id="locationRequest">
+            <h4 style="color: #1e3a8a; margin-bottom: 15px;">📍 Location Access Required</h4>
+            <p style="color: #64748b; margin-bottom: 20px; font-size: 14px;">Location access is required for safety monitoring and emergency features.</p>
+            <button class="btn btn-success" onclick="requestLocation()">Grant Location Access</button>
+            <div class="location-status hidden" id="locationStatus"></div>
+        </div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label class="form-label">Tourist Name</label>
+                <input type="text" class="form-control" id="touristName" placeholder="Enter your full name" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Digital ID</label>
+                <input type="text" class="form-control" id="digitalId" placeholder="Enter your Digital ID (TID-XXXXX-XXXXX)" required>
+                <small style="color: #64748b; font-size: 12px;">Your digital ID was provided during registration</small>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 20px;">
+                🔐 Access Tourist Portal
+            </button>
+        </form>
+        
+        <div style="text-align: center; color: #64748b; font-size: 12px; margin-top: 20px;">
+            Don't have a Digital ID? Contact registration desk or admin office.
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="dashboard" class="dashboard">
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <div class="header-content">
+                    <div>
+                        <h1>🛡️ Smart Tourism Portal</h1>
+                        <div class="header-subtitle">AI-Enhanced Safety & Navigation</div>
+                    </div>
+                    <div class="user-info">
+                        <div id="touristDisplayName" style="font-weight: 600;">Tourist</div>
+                        <div style="font-size: 12px; opacity: 0.9;">Blockchain Verified</div>
+                        <button class="btn btn-danger" onclick="logout()" style="margin-top: 8px; font-size: 12px; padding: 6px 12px;">Logout</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Digital ID Card -->
+            <div class="digital-id-card">
+                <div class="id-header">
+                    <div class="id-title">🛡️ DIGITAL TOURIST ID</div>
+                    <div class="blockchain-verified">🔗 BLOCKCHAIN VERIFIED</div>
+                </div>
+                <div class="tourist-id" id="displayDigitalId">TID-LOADING...</div>
+                <div class="tourist-name" id="displayTouristName">Loading...</div>
+                <div class="id-details">
+                    <div class="id-detail">
+                        <div class="id-detail-label">Nationality</div>
+                        <div class="id-detail-value" id="displayNationality">Loading...</div>
+                    </div>
+                    <div class="id-detail">
+                        <div class="id-detail-label">Entry Point</div>
+                        <div class="id-detail-value" id="displayEntryPoint">Loading...</div>
+                    </div>
+                    <div class="id-detail">
+                        <div class="id-detail-label">Visit Duration</div>
+                        <div class="id-detail-value" id="displayDuration">Loading...</div>
+                    </div>
+                    <div class="id-detail">
+                        <div class="id-detail-label">Status</div>
+                        <div class="id-detail-value" style="color: #10b981;">✅ ACTIVE</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Location Display -->
+            <div class="live-location">
+                <div class="location-header">
+                    <div class="location-title">📍 Current Location</div>
+                    <div class="location-live">🔴 LIVE</div>
+                </div>
+                <div class="current-coords" id="currentLocationCoords">Getting location...</div>
+                <div class="location-accuracy">
+                    Last updated: <span id="locationUpdated">Never</span> | 
+                    Accuracy: <span id="locationAccuracy">High</span>
+                </div>
+            </div>
+
+            <!-- Safety Score -->
+            <div class="safety-score">
+                <div class="score-header">
+                    <div class="score-title">🤖 AI Safety Score</div>
+                    <div class="ai-badge">AI POWERED</div>
+                </div>
+                <div class="score-display">
+                    <div class="score-number score-good" id="safetyScore">85</div>
+                    <div class="score-label">Safety Score (Real-time)</div>
+                    <div style="font-size: 12px; color: #64748b; margin-top: 5px;">Last updated: <span id="scoreUpdated">Loading...</span></div>
+                </div>
+                <div class="score-factors" id="scoreFactors">
+                    <div class="score-factor">
+                        <div class="factor-icon">🕐</div>
+                        <div class="factor-label">Time Safety</div>
+                    </div>
+                    <div class="score-factor">
+                        <div class="factor-icon">📍</div>
+                        <div class="factor-label">Location Risk</div>
+                    </div>
+                    <div class="score-factor">
+                        <div class="factor-icon">🌤️</div>
+                        <div class="factor-label">Weather</div>
+                    </div>
+                    <div class="score-factor">
+                        <div class="factor-icon">👥</div>
+                        <div class="factor-label">Crowd Density</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('dashboard')">📊 Dashboard</button>
+                <button class="tab" onclick="showTab('map')">🗺️ Live Map</button>
+                <button class="tab" onclick="showTab('hotels')">🏨 Hotels</button>
+                <button class="tab" onclick="showTab('places')">🏛️ Visiting Places</button>
+            </div>
+
+            <!-- Dashboard Tab -->
+            <div id="dashboardTab" class="tab-content active">
+                <h3 style="margin-bottom: 20px; color: #1e3a8a;">📊 Your Tourism Dashboard</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                    <div style="background: linear-gradient(135deg, #3b82f6, #1e40af); color: white; padding: 20px; border-radius: 15px; text-align: center;">
+                        <div style="font-size: 32px; margin-bottom: 10px;">🛡️</div>
+                        <div style="font-size: 18px; font-weight: 600;">Protected</div>
+                        <div style="font-size: 12px; opacity: 0.9;">AI Monitoring Active</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 20px; border-radius: 15px; text-align: center;">
+                        <div style="font-size: 32px; margin-bottom: 10px;">📍</div>
+                        <div style="font-size: 18px; font-weight: 600;">Tracked</div>
+                        <div style="font-size: 12px; opacity: 0.9;">Location Services On</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 20px; border-radius: 15px; text-align: center;">
+                        <div style="font-size: 32px; margin-bottom: 10px;">🚨</div>
+                        <div style="font-size: 18px; font-weight: 600;">Emergency</div>
+                        <div style="font-size: 12px; opacity: 0.9;">Panic Button Ready</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 30px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); border: 1px solid #f0f9ff;">
+                    <h4 style="color: #1e3a8a; margin-bottom: 15px;">📋 Recent Activities</h4>
+                    <div id="recentActivities">
+                        <div style="padding: 10px 0; border-bottom: 1px solid #f0f9ff;">
+                            <div style="font-weight: 600; color: #1e3a8a;">Login Successful</div>
+                            <div style="font-size: 12px; color: #64748b;">Digital ID verified with blockchain</div>
+                        </div>
+                        <div style="padding: 10px 0; border-bottom: 1px solid #f0f9ff;">
+                            <div style="font-weight: 600; color: #1e3a8a;">AI Safety Score Updated</div>
+                            <div style="font-size: 12px; color: #64748b;">Current score: 85 (Good)</div>
+                        </div>
+                        <div style="padding: 10px 0;">
+                            <div style="font-weight: 600; color: #1e3a8a;">Location Services Enabled</div>
+                            <div style="font-size: 12px; color: #64748b;">Real-time safety monitoring active</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Map Tab -->
+            <div id="mapTab" class="tab-content">
+                <div class="map-container">
+                    <div class="map-header">
+                        <h3 class="map-title">🗺️ Live Location & Safety Map</h3>
+                        <div class="map-controls">
+                            <button class="map-btn active" onclick="showMyLocation()">📍 My Location</button>
+                            <button class="map-btn" onclick="showNearbyPlaces()">🏨 Nearby Places</button>
+                            <button class="map-btn" onclick="showDangerZones()">⚠️ Danger Zones</button>
+                            <button class="map-btn" onclick="showOfficers()">👮‍♂️ Officers</button>
+                            <button class="map-btn" onclick="refreshMap()">🔄 Refresh</button>
+                        </div>
+                    </div>
+                    <div id="liveMap" class="map"></div>
+                </div>
+                
+                <div style="margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <div style="background: white; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid #f0f9ff;">
+                        <div style="font-size: 24px; margin-bottom: 5px;">📍</div>
+                        <div style="font-weight: 600; color: #1e3a8a;">Current Location</div>
+                        <div style="font-size: 12px; color: #64748b;">Real-time tracking</div>
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid #f0f9ff;">
+                        <div style="font-size: 24px; margin-bottom: 5px;" id="nearbyCount">🏨</div>
+                        <div style="font-weight: 600; color: #1e3a8a;">Nearby Places</div>
+                        <div style="font-size: 12px; color: #64748b;">Within 1km</div>
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid #f0f9ff;">
+                        <div style="font-size: 24px; margin-bottom: 5px;" id="safetyStatus">✅</div>
+                        <div style="font-weight: 600; color: #1e3a8a;">Safety Status</div>
+                        <div style="font-size: 12px; color: #64748b;">All clear</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hotels Tab -->
+            <div id="hotelsTab" class="tab-content">
+                <h3 style="margin-bottom: 20px; color: #1e3a8a;">🏨 Recommended Hotels</h3>
+                <div class="places-grid" id="hotelsGrid">
+                    <div class="empty-state">
+                        <div class="empty-icon">🏨</div>
+                        <h4>No Hotels Available</h4>
+                        <p>Hotels will be displayed here when added by administrators.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visiting Places Tab -->
+            <div id="placesTab" class="tab-content">
+                <h3 style="margin-bottom: 20px; color: #1e3a8a;">🏛️ Tourist Attractions</h3>
+                <div class="places-grid" id="placesGrid">
+                    <div class="empty-state">
+                        <div class="empty-icon">🏛️</div>
+                        <h4>No Places Available</h4>
+                        <p>Tourist attractions will be displayed here when added by administrators.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panic Button -->
+    <div class="panic-section">
+        <button class="panic-button" id="panicButton" onclick="activatePanicButton()">
+            🚨
+        </button>
+        <div id="panicCountdown" style="text-align: center; color: white; font-weight: 600; margin-top: 10px; display: none;"></div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Application State
+        let appData = {
+            currentTourist: null,
+            location: { lat: 28.6139, lng: 77.2090 },
+            locationGranted: false,
+            places: [],
+            officers: [],
+            dangerZones: [],
+            safetyScore: 85,
+            aiMonitoring: true,
+            backendConnected: false,
+            dangerZoneAlert: null,
+            panicCountdownActive: false,
+            liveMap: null,
+            locationMarker: null,
+            nearbyPlaces: [],
+            emergencyData: {
+                touristId: null,
+                location: null,
+                timestamp: null
+            }
+        };
+
+        // API Configuration
+        const API_BASE = 'http://localhost:5000/api';
+
+        // Location Functions
+        function requestLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        appData.location = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        appData.locationGranted = true;
+                        
+                        const statusEl = document.getElementById('locationStatus');
+                        statusEl.className = 'location-status location-granted';
+                        statusEl.textContent = '✅ Location access granted - Safety monitoring active';
+                        statusEl.classList.remove('hidden');
+                        
+                        document.getElementById('locationRequest').style.display = 'none';
+                        showNotification('Location access granted! AI safety monitoring is now active.', 'success');
+                        
+                        // Start location monitoring
+                        startLocationMonitoring();
+                        updateLocationDisplay();
+                    },
+                    (error) => {
+                        const statusEl = document.getElementById('locationStatus');
+                        statusEl.className = 'location-status location-denied';
+                        statusEl.textContent = '❌ Location access denied - Limited functionality';
+                        statusEl.classList.remove('hidden');
+                        
+                        showNotification('Location access is required for full safety features', 'warning');
+                    }
+                );
+            } else {
+                showNotification('Geolocation is not supported by this browser', 'error');
+            }
+        }
+
+        function startLocationMonitoring() {
+            // Update location every 10 seconds for real-time tracking
+            setInterval(() => {
+                if (appData.locationGranted && navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            appData.location = {
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude
+                            };
+                            
+                            updateLocationDisplay();
+                            
+                            // Update map marker if map is visible
+                            if (appData.liveMap && appData.locationMarker) {
+                                appData.locationMarker.setLatLng([appData.location.lat, appData.location.lng]);
+                            }
+                            
+                            // Check for danger zones
+                            checkDangerZones();
+                            
+                            // Update safety score
+                            updateSafetyScore();
+                        }
+                    );
+                }
+            }, 10000); // Update every 10 seconds
+        }
+
+        function updateLocationDisplay() {
+            const coords = `${appData.location.lat.toFixed(6)}, ${appData.location.lng.toFixed(6)}`;
+            const coordsElement = document.getElementById('currentLocationCoords');
+            const updatedElement = document.getElementById('locationUpdated');
+            
+            if (coordsElement) {
+                coordsElement.textContent = coords;
+            }
+            
+            if (updatedElement) {
+                updatedElement.textContent = new Date().toLocaleTimeString();
+            }
+        }
+
+        // Utility Functions
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, type === 'warning' ? 5000 : 3000);
+        }
+
+        // API Calls
+        async function apiCall(endpoint, method = 'GET', data = null) {
+            try {
+                const options = {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+                
+                if (data) {
+                    options.body = JSON.stringify(data);
+                }
+                
+                const response = await fetch(`${API_BASE}${endpoint}`, options);
+                
+                if (!response.ok) {
+                    throw new Error(`API call failed: ${response.status}`);
+                }
+                
+                appData.backendConnected = true;
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                appData.backendConnected = false;
+                return null;
+            }
+        }
+
+        // Initialize Application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show location request
+            document.getElementById('locationRequest').classList.add('show');
+            
+            // Setup event listeners
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            
+            // Check backend connection
+            checkBackendConnection();
+            
+            // Start AI monitoring simulation
+            startAIMonitoring();
+        });
+
+        async function checkBackendConnection() {
+            const health = await apiCall('/system/health');
+            if (!health) {
+                showNotification('Backend server not available. Running in demo mode.', 'info');
+            }
+        }
+
+        // Authentication
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('touristName').value;
+            const digitalId = document.getElementById('digitalId').value;
+            
+            if (appData.backendConnected) {
+                const loginData = await apiCall('/tourist/login', 'POST', {
+                    name,
+                    digitalId
+                });
+                
+                if (loginData && loginData.success) {
+                    appData.currentTourist = loginData.tourist;
+                    showDashboard();
+                    return;
+                } else {
+                    showNotification('Invalid name or Digital ID. Please check and try again.', 'error');
+                    return;
+                }
+            }
+            
+            // Demo mode validation
+            if (!digitalId.startsWith('TID-')) {
+                showNotification('Digital ID must start with "TID-". Example: TID-123456-ABCDEF', 'error');
+                return;
+            }
+            
+            if (name.length < 2) {
+                showNotification('Please enter a valid name', 'error');
+                return;
+            }
+            
+            // Demo success
+            appData.currentTourist = {
+                digital_id: digitalId,
+                name: name,
+                nationality: 'Indian',
+                entry_point: 'Airport Terminal 1',
+                visit_duration: '7 days',
+                safety_score: 85,
+                status: 'active'
+            };
+            
+            // Set emergency data
+            appData.emergencyData.touristId = digitalId;
+            appData.emergencyData.location = appData.location;
+            
+            showDashboard();
+        }
+
+        function showDashboard() {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('dashboard').classList.add('active');
+            
+            // Update digital ID display
+            document.getElementById('displayDigitalId').textContent = appData.currentTourist.digital_id;
+            document.getElementById('displayTouristName').textContent = appData.currentTourist.name;
+            document.getElementById('touristDisplayName').textContent = appData.currentTourist.name;
+            document.getElementById('displayNationality').textContent = appData.currentTourist.nationality || 'Indian';
+            document.getElementById('displayEntryPoint').textContent = appData.currentTourist.entry_point || 'Airport Terminal 1';
+            document.getElementById('displayDuration').textContent = appData.currentTourist.visit_duration || '7 days';
+            
+            // Update safety score
+            updateSafetyScoreDisplay();
+            
+            // Update location display
+            updateLocationDisplay();
+            
+            showNotification('Welcome! Your digital ID has been verified successfully.', 'success');
+            
+            // Load places
+            loadPlaces();
+            
+            // Initialize live map
+            initializeLiveMap();
+            
+            // Start AI monitoring
+            if (appData.locationGranted) {
+                startLocationMonitoring();
+            }
+        }
+
+        // Safety Score Management
+        function updateSafetyScore() {
+            if (!appData.currentTourist) return;
+            
+            let score = 85; // Base score
+            
+            // Time-based risk
+            const hour = new Date().getHours();
+            if (hour < 6 || hour > 22) {
+                score -= 15;
+            } else if (hour < 8 || hour > 20) {
+                score -= 5;
+            }
+            
+            // Location-based risk (simulated)
+            if (appData.dangerZoneAlert) {
+                score -= 20;
+            }
+            
+            // Random variation for demo
+            score += Math.floor(Math.random() * 10) - 5;
+            
+            appData.safetyScore = Math.max(10, Math.min(100, score));
+            updateSafetyScoreDisplay();
+        }
+
+        function updateSafetyScoreDisplay() {
+            const scoreElement = document.getElementById('safetyScore');
+            const scoreUpdated = document.getElementById('scoreUpdated');
+            
+            scoreElement.textContent = appData.safetyScore;
+            scoreUpdated.textContent = new Date().toLocaleTimeString();
+            
+            // Update score color
+            scoreElement.className = 'score-number';
+            if (appData.safetyScore >= 80) {
+                scoreElement.classList.add('score-good');
+            } else if (appData.safetyScore >= 60) {
+                scoreElement.classList.add('score-warning');
+            } else {
+                scoreElement.classList.add('score-danger');
+            }
+        }
+
+        // Danger Zone Detection and AI Alerts
+        function checkDangerZones() {
+            if (!appData.locationGranted || !appData.currentTourist) return;
+            
+            // Load danger zones from backend or use demo data
+            if (appData.dangerZones.length === 0) {
+                // Demo danger zones
+                appData.dangerZones = [
+                    { lat: appData.location.lat + 0.002, lng: appData.location.lng + 0.002, name: 'Construction Zone', radius: 200 },
+                    { lat: appData.location.lat - 0.001, lng: appData.location.lng + 0.003, name: 'High Crime Area', radius: 150 }
+                ];
+            }
+            
+            for (const zone of appData.dangerZones) {
+                const distance = calculateDistance(appData.location.lat, appData.location.lng, zone.lat, zone.lng);
+                
+                if (distance < zone.radius + 50) { // Alert when within 50m of danger zone
+                    if (!appData.dangerZoneAlert || appData.dangerZoneAlert.zone !== zone.name) {
+                        triggerDangerZoneAlert(zone);
+                    }
+                    return;
+                }
+            }
+            
+            // No danger zones nearby
+            if (appData.dangerZoneAlert) {
+                clearDangerZoneAlert();
+            }
+        }
+
+        function triggerDangerZoneAlert(zone) {
+            appData.dangerZoneAlert = { zone: zone.name, triggered: new Date() };
+            
+            // Show AI alert banner
+            const banner = document.getElementById('aiAlertBanner');
+            const message = document.getElementById('aiAlertMessage');
+            
+            message.textContent = `🚨 AI ALERT: You are approaching ${zone.name}! Please exercise caution and consider alternative routes.`;
+            banner.classList.add('show', 'danger-zone');
+            
+            // Show notification
+            showNotification(`⚠️ DANGER ZONE ALERT: Approaching ${zone.name}`, 'warning');
+            
+            // Send alert to backend for admin and officer notification
+            if (appData.backendConnected) {
+                apiCall('/alerts', 'POST', {
+                    type: 'geofence_breach',
+                    title: 'Tourist Approaching Danger Zone',
+                    message: `Tourist ${appData.currentTourist.name} (${appData.currentTourist.digital_id}) is approaching ${zone.name}`,
+                    severity: 'high',
+                    tourist_id: appData.currentTourist.digital_id,
+                    location: appData.location
+                });
+            }
+            
+            // Update safety score
+            updateSafetyScore();
+        }
+
+        function clearDangerZoneAlert() {
+            appData.dangerZoneAlert = null;
+            
+            // Hide AI alert banner
+            const banner = document.getElementById('aiAlertBanner');
+            banner.classList.remove('show', 'danger-zone');
+            
+            showNotification('✅ You have moved to a safer area', 'success');
+            
+            // Update safety score
+            updateSafetyScore();
+        }
+
+        function dismissAIAlert() {
+            const banner = document.getElementById('aiAlertBanner');
+            banner.classList.remove('show');
+        }
+
+        function calculateDistance(lat1, lng1, lat2, lng2) {
+            const R = 6371e3; // Earth's radius in meters
+            const φ1 = lat1 * Math.PI/180;
+            const φ2 = lat2 * Math.PI/180;
+            const Δφ = (lat2-lat1) * Math.PI/180;
+            const Δλ = (lng2-lng1) * Math.PI/180;
+
+            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                     Math.cos(φ1) * Math.cos(φ2) *
+                     Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+            return R * c;
+        }
+
+        // AI Monitoring System
+        function startAIMonitoring() {
+            // Update safety score every 60 seconds
+            setInterval(() => {
+                if (appData.currentTourist && appData.aiMonitoring) {
+                    updateSafetyScore();
+                }
+            }, 60000);
+            
+            // Simulate random AI insights
+            setInterval(() => {
+                if (appData.currentTourist && Math.random() < 0.1) { // 10% chance
+                    const insights = [
+                        'Weather conditions are favorable for sightseeing',
+                        'Low crowd density detected in your area',
+                        'Recommended visiting time for attractions: 10 AM - 4 PM',
+                        'Your movement pattern indicates safe tourism behavior'
+                    ];
+                    
+                    const randomInsight = insights[Math.floor(Math.random() * insights.length)];
+                    showNotification(`🤖 AI Insight: ${randomInsight}`, 'info');
+                }
+            }, 120000);
+        }
+
+        // Live Map Functionality
+        function initializeLiveMap() {
+            setTimeout(() => {
+                if (!appData.liveMap) {
+                    const mapElement = document.getElementById('liveMap');
+                    if (mapElement) {
+                        appData.liveMap = L.map('liveMap').setView([appData.location.lat, appData.location.lng], 15);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '© OpenStreetMap contributors'
+                        }).addTo(appData.liveMap);
+                        
+                        // Add current location marker
+                        showMyLocation();
+                    }
+                }
+            }, 500);
+        }
+
+        function showMyLocation() {
+            if (!appData.liveMap) return;
+            
+            // Clear existing location marker
+            if (appData.locationMarker) {
+                appData.liveMap.removeLayer(appData.locationMarker);
+            }
+            
+            // Add current location marker
+            appData.locationMarker = L.marker([appData.location.lat, appData.location.lng])
+                .addTo(appData.liveMap)
+                .bindPopup(`📍 Your Current Location<br>Safety Score: ${appData.safetyScore}`)
+                .openPopup();
+            
+            // Center map on location
+            appData.liveMap.setView([appData.location.lat, appData.location.lng], 16);
+            
+            // Update button state
+            updateMapButtonState('showMyLocation');
+            
+            showNotification('Centered on your current location', 'info');
+        }
+
+        function showNearbyPlaces() {
+            if (!appData.liveMap) return;
+            
+            // Clear existing markers except location
+            appData.liveMap.eachLayer(function(layer) {
+                if (layer instanceof L.Marker && layer !== appData.locationMarker) {
+                    appData.liveMap.removeLayer(layer);
+                }
+            });
+            
+            // Add nearby places
+            let nearbyCount = 0;
+            appData.places.forEach(place => {
+                if (place.location) {
+                    const distance = calculateDistance(
+                        appData.location.lat, appData.location.lng,
+                        place.location.lat, place.location.lng
+                    );
+                    
+                    if (distance < 1000) { // Within 1km
+                        nearbyCount++;
+                        const icon = place.type === 'hotel' ? '🏨' : '🏛️';
+                        
+                        L.marker([place.location.lat, place.location.lng])
+                            .addTo(appData.liveMap)
+                            .bindPopup(`${icon} ${place.name}<br>Distance: ${Math.round(distance)}m<br>Rating: ${'⭐'.repeat(place.rating || 0)}`);
+                    }
+                }
+            });
+            
+            // Update nearby count display
+            document.getElementById('nearbyCount').textContent = nearbyCount;
+            
+            // Update button state
+            updateMapButtonState('showNearbyPlaces');
+            
+            showNotification(`Found ${nearbyCount} nearby places`, 'info');
+        }
+
+        function showDangerZones() {
+            if (!appData.liveMap) return;
+            
+            // Clear existing circles
+            appData.liveMap.eachLayer(function(layer) {
+                if (layer instanceof L.Circle) {
+                    appData.liveMap.removeLayer(layer);
+                }
+            });
+            
+            // Add danger zones
+            appData.dangerZones.forEach(zone => {
+                L.circle([zone.lat, zone.lng], {
+                    radius: zone.radius,
+                    color: '#ef4444',
+                    fillColor: '#ef4444',
+                    fillOpacity: 0.3
+                }).addTo(appData.liveMap)
+                  .bindPopup(`⚠️ ${zone.name}<br>Radius: ${zone.radius}m<br>Stay Alert!`);
+            });
+            
+            // Update button state
+            updateMapButtonState('showDangerZones');
+            
+            showNotification('Danger zones highlighted on map', 'warning');
+        }
+
+        function showOfficers() {
+            if (!appData.liveMap) return;
+            
+            // Add demo officers nearby
+            const officers = [
+                { lat: appData.location.lat + 0.001, lng: appData.location.lng + 0.002, name: 'Officer Smith', badge: 'OFF001' },
+                { lat: appData.location.lat - 0.002, lng: appData.location.lng - 0.001, name: 'Officer Johnson', badge: 'OFF002' }
+            ];
+            
+            officers.forEach(officer => {
+                const distance = Math.round(calculateDistance(
+                    appData.location.lat, appData.location.lng,
+                    officer.lat, officer.lng
+                ));
+                
+                L.marker([officer.lat, officer.lng])
+                    .addTo(appData.liveMap)
+                    .bindPopup(`👮‍♂️ ${officer.name}<br>Badge: ${officer.badge}<br>Distance: ${distance}m`);
+            });
+            
+            // Update button state
+            updateMapButtonState('showOfficers');
+            
+            showNotification('Nearby officers shown on map', 'info');
+        }
+
+        function refreshMap() {
+            if (!appData.liveMap) return;
+            
+            appData.liveMap.invalidateSize();
+            showMyLocation();
+            showNotification('Map refreshed with current location', 'success');
+        }
+
+        function updateMapButtonState(activeButton) {
+            // Remove active class from all buttons
+            document.querySelectorAll('.map-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to current button
+            document.querySelector(`[onclick="${activeButton}()"]`).classList.add('active');
+        }
+
+        // Places Management
+        async function loadPlaces() {
+            if (appData.backendConnected) {
+                const placesData = await apiCall('/tourist/places');
+                if (placesData && placesData.success) {
+                    appData.places = placesData.places;
+                }
+            } else {
+                // Demo places data
+                appData.places = [
+                    {
+                        id: 'demo-hotel-1',
+                        name: 'Grand Heritage Hotel',
+                        type: 'hotel',
+                        description: 'Luxury hotel with traditional architecture and modern amenities.',
+                        location: { lat: appData.location.lat + 0.003, lng: appData.location.lng + 0.002 },
+                        rating: 5,
+                        contact: '+91-11-12345678'
+                    },
+                    {
+                        id: 'demo-place-1',
+                        name: 'Historic Monument',
+                        type: 'visiting_place',
+                        description: 'Ancient monument with rich cultural heritage and guided tours.',
+                        location: { lat: appData.location.lat - 0.002, lng: appData.location.lng + 0.004 },
+                        rating: 4,
+                        contact: '+91-11-87654321'
+                    }
+                ];
+            }
+            
+            updatePlacesDisplay();
+        }
+
+        function updatePlacesDisplay() {
+            const hotels = appData.places.filter(p => p.type === 'hotel');
+            const places = appData.places.filter(p => p.type === 'visiting_place');
+            
+            updateHotelsDisplay(hotels);
+            updateVisitingPlacesDisplay(places);
+        }
+
+        function updateHotelsDisplay(hotels) {
+            const container = document.getElementById('hotelsGrid');
+            
+            if (hotels.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🏨</div>
+                        <h4>No Hotels Available</h4>
+                        <p>Hotels will be displayed here when added by administrators.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            hotels.forEach(hotel => {
+                html += createPlaceCard(hotel, '🏨');
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function updateVisitingPlacesDisplay(places) {
+            const container = document.getElementById('placesGrid');
+            
+            if (places.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🏛️</div>
+                        <h4>No Places Available</h4>
+                        <p>Tourist attractions will be displayed here when added by administrators.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            places.forEach(place => {
+                html += createPlaceCard(place, '🏛️');
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function createPlaceCard(place, icon) {
+            const rating = '⭐'.repeat(place.rating || 0) || 'Not Rated';
+            const distance = place.location ? 
+                Math.round(calculateDistance(
+                    appData.location.lat, appData.location.lng,
+                    place.location.lat, place.location.lng
+                )) : 'Unknown';
+            
+            return `
+                <div class="place-card">
+                    <div class="place-image">${icon}</div>
+                    <div class="place-info">
+                        <div class="place-name">${place.name}</div>
+                        <div class="place-rating">${rating}</div>
+                        <div class="place-distance">📍 ${distance}m away</div>
+                        <div class="place-description">
+                            ${place.description || 'No description available'}
+                        </div>
+                        <div class="place-actions">
+                            <button class="btn btn-primary" style="font-size: 12px; padding: 8px 15px;" onclick="viewPlace('${place.id}')">
+                                📍 View Details
+                            </button>
+                            <button class="btn btn-success" style="font-size: 12px; padding: 8px 15px;" onclick="getDirections('${place.id}')">
+                                🗺️ Directions
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Navigation
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            event.target.classList.add('active');
+            
+            // Initialize live map if map tab is selected
+            if (tabName === 'map') {
+                if (!appData.liveMap) {
+                    initializeLiveMap();
+                } else {
+                    setTimeout(() => {
+                        appData.liveMap.invalidateSize();
+                        showMyLocation();
+                    }, 100);
+                }
+            }
+        }
+
+        // Enhanced Panic Button with Notifications to Admin and Officers
+        function activatePanicButton() {
+            if (appData.panicCountdownActive) return;
+            
+            appData.panicCountdownActive = true;
+            const button = document.getElementById('panicButton');
+            const countdown = document.getElementById('panicCountdown');
+            
+            button.classList.add('countdown');
+            countdown.style.display = 'block';
+            
+            let count = 3;
+            countdown.textContent = `Emergency in ${count}s`;
+            
+            const countdownInterval = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    countdown.textContent = `Emergency in ${count}s`;
+                } else {
+                    clearInterval(countdownInterval);
+                    sendPanicAlert();
+                }
+            }, 1000);
+        }
+
+        async function sendPanicAlert() {
+            const button = document.getElementById('panicButton');
+            const countdown = document.getElementById('panicCountdown');
+            
+            button.classList.remove('countdown');
+            countdown.style.display = 'none';
+            appData.panicCountdownActive = false;
+            
+            // Update emergency data
+            appData.emergencyData = {
+                touristId: appData.currentTourist.digital_id,
+                touristName: appData.currentTourist.name,
+                location: appData.location,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Send panic alert to backend
+            if (appData.backendConnected) {
+                const result = await apiCall('/emergency/panic', 'POST', {
+                    touristId: appData.currentTourist.digital_id,
+                    location: appData.location
+                });
+                
+                if (result && result.success) {
+                    showNotification(`🚨 EMERGENCY ALERT SENT! Response time: ${result.response_time}`, 'error');
+                    
+                    // Show emergency banner
+                    const banner = document.getElementById('aiAlertBanner');
+                    const message = document.getElementById('aiAlertMessage');
+                    message.textContent = '🚨 EMERGENCY RESPONSE INITIATED! Help is on the way. Stay calm and stay safe.';
+                    banner.classList.add('show', 'danger-zone');
+                    
+                    return;
+                }
+            }
+            
+            // Demo mode - Show comprehensive emergency alert
+            showNotification('🚨 EMERGENCY ALERT ACTIVATED! Emergency services and contacts have been notified.', 'error');
+            
+            // Show detailed emergency information
+            alert(`EMERGENCY ALERT SENT!\n\nTourist: ${appData.currentTourist.name}\nDigital ID: ${appData.currentTourist.digital_id}\nLocation: ${appData.location.lat.toFixed(6)}, ${appData.location.lng.toFixed(6)}\nTime: ${new Date().toLocaleString()}\n\nNotifications sent to:\n✅ All nearby officers\n✅ System administrators\n✅ Emergency contacts\n✅ Local authorities\n\nHelp is on the way! Stay calm and stay safe.`);
+            
+            // Show emergency banner
+            const banner = document.getElementById('aiAlertBanner');
+            const message = document.getElementById('aiAlertMessage');
+            message.textContent = '🚨 EMERGENCY RESPONSE INITIATED! Notifications sent to admin and officers. Help is on the way.';
+            banner.classList.add('show', 'danger-zone');
+        }
+
+        // Utility Functions
+        function viewPlace(id) {
+            const place = appData.places.find(p => p.id === id);
+            if (place) {
+                showNotification(`📍 Viewing details for ${place.name}`, 'info');
+                
+                // Show place details in alert
+                const distance = place.location ? 
+                    Math.round(calculateDistance(
+                        appData.location.lat, appData.location.lng,
+                        place.location.lat, place.location.lng
+                    )) : 'Unknown';
+                
+                alert(`${place.name}\n\nType: ${place.type}\nRating: ${'⭐'.repeat(place.rating || 0)}\nDistance: ${distance}m\nContact: ${place.contact || 'Not available'}\n\n${place.description || 'No description available'}`);
+            }
+        }
+
+        function getDirections(id) {
+            const place = appData.places.find(p => p.id === id);
+            if (place && place.location) {
+                showNotification(`🗺️ Getting directions to ${place.name}`, 'info');
+                
+                // Show directions in map tab
+                showTab('map');
+                
+                // Center map between current location and destination
+                setTimeout(() => {
+                    if (appData.liveMap) {
+                        const bounds = L.latLngBounds([
+                            [appData.location.lat, appData.location.lng],
+                            [place.location.lat, place.location.lng]
+                        ]);
+                        appData.liveMap.fitBounds(bounds, { padding: [20, 20] });
+                        
+                        // Add destination marker
+                        L.marker([place.location.lat, place.location.lng])
+                            .addTo(appData.liveMap)
+                            .bindPopup(`🎯 Destination: ${place.name}`)
+                            .openPopup();
+                    }
+                }, 200);
+            }
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                appData.currentTourist = null;
+                appData.dangerZoneAlert = null;
+                appData.emergencyData = { touristId: null, location: null, timestamp: null };
+                
+                document.getElementById('loginSection').style.display = 'block';
+                document.getElementById('dashboard').classList.remove('active');
+                document.getElementById('loginForm').reset();
+                
+                // Clear AI alert banner
+                document.getElementById('aiAlertBanner').classList.remove('show', 'danger-zone');
+                
+                showNotification('Logged out successfully. Stay safe!', 'info');
+            }
+        }
+    </script>
+</body>
+</html>
